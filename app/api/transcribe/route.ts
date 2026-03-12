@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
 const dashscope = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  apiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || 'placeholder',
+  baseURL: process.env.LLM_BASE_URL || process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
 })
 
 export async function POST(req: NextRequest) {
