@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.WHISPER_API_KEY || process.env.OPENAI_API_KEY,
+const dashscope = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
 })
 
 export async function POST(req: NextRequest) {
@@ -14,14 +15,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '没有收到音频文件' }, { status: 400 })
     }
 
-    // Check file size (Whisper limit is 25MB)
+    // DashScope ASR file size limit
     if (audioFile.size > 25 * 1024 * 1024) {
       return NextResponse.json({ error: '音频文件过大' }, { status: 400 })
     }
 
-    const transcription = await openai.audio.transcriptions.create({
+    const transcription = await dashscope.audio.transcriptions.create({
       file: audioFile,
-      model: 'whisper-1',
+      model: 'sensevoice-v1',
       language: 'zh',
     })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from '@/hooks/useSession'
 import { ChatPanel } from '@/components/workspace/ChatPanel'
@@ -8,19 +8,24 @@ import { DraftPanel } from '@/components/workspace/DraftPanel'
 import { ResultPanel } from '@/components/workspace/ResultPanel'
 import { StatusBadge } from '@/components/workspace/StatusBadge'
 import { ProgressBar } from '@/components/workspace/ProgressBar'
-import { Button } from '@/components/ui/button'
+// Button import removed — using inline styled buttons for Cal.ai consistency
 
 export default function WorkspacePage() {
   const router = useRouter()
   const { session, error, start, reply, finalize, reset } = useSession()
   const [mobileTab, setMobileTab] = useState<'chat' | 'draft'>('chat')
 
+  const startedRef = useRef(false)
+
   useEffect(() => {
+    // 防止 React 严格模式下 useEffect 双重执行导致重定向
+    if (startedRef.current) return
     const initialInput = sessionStorage.getItem('initial_input')
     if (!initialInput) {
       router.push('/')
       return
     }
+    startedRef.current = true
     sessionStorage.removeItem('initial_input')
     start(initialInput)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -33,12 +38,13 @@ export default function WorkspacePage() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b px-6 py-3 flex items-center justify-between shrink-0">
+      <header className="border-b border-[#e5e5e5] px-6 py-3 flex items-center justify-between shrink-0 bg-white">
         <div className="flex items-center gap-4">
           <button
             onClick={handleReset}
-            className="font-semibold text-sm hover:text-muted-foreground transition-colors"
+            className="text-[1.1rem] font-bold tracking-tight text-[#0a0a0a] hover:text-[#525252] transition-colors flex items-center gap-1.5"
           >
+            <span className="w-2 h-2 rounded-full bg-[#0ea5e9]" />
             需求翻译器
           </button>
           <StatusBadge
@@ -46,13 +52,16 @@ export default function WorkspacePage() {
             clarityScore={session.draft.assistant_judgement.clarity_score}
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {error && (
             <span className="text-sm text-destructive">{error}</span>
           )}
-          <Button variant="ghost" size="sm" onClick={handleReset}>
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 bg-[#0ea5e9] text-white rounded-lg text-sm font-semibold hover:bg-[#0284c7] transition-colors"
+          >
             重新开始
-          </Button>
+          </button>
         </div>
       </header>
 
@@ -106,11 +115,14 @@ export default function WorkspacePage() {
             />
           ) : (
             <>
-              <div className="border-b px-4 py-2 text-xs font-medium text-muted-foreground hidden md:flex items-center justify-between">
-                <span>实时需求草案</span>
+              <div className="border-b border-[#e5e5e5] px-4 py-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#737373] hidden md:flex items-center justify-between bg-white">
+                <div className="flex items-center gap-2">
+                  <span className="w-1 h-3.5 rounded-sm bg-[#0ea5e9]" />
+                  实时需求草案
+                </div>
                 {session.draft.assistant_judgement.clarity_score > 0 && (
-                  <span className="text-primary font-semibold">
-                    清晰度 {session.draft.assistant_judgement.clarity_score}/10
+                  <span className="text-[#0ea5e9] font-bold text-xs normal-case tracking-normal">
+                    {session.draft.assistant_judgement.clarity_score}/10
                   </span>
                 )}
               </div>

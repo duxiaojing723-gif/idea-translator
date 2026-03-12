@@ -1,17 +1,16 @@
 'use client'
 
 import { RequirementDraft, FieldStatus } from '@/types/draft'
-import { Separator } from '@/components/ui/separator'
 
 interface DraftPanelProps {
   draft: RequirementDraft
 }
 
-const STATUS_STYLES: Record<FieldStatus, string> = {
-  confirmed: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
-  inferred: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
-  missing: 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500',
-  conflicting: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+const STATUS_DOT: Record<FieldStatus, string> = {
+  confirmed: 'bg-[#15803d]',
+  inferred: 'bg-[#0ea5e9]',
+  missing: 'bg-[#d4d4d4]',
+  conflicting: 'bg-red-500',
 }
 
 const STATUS_LABELS: Record<FieldStatus, string> = {
@@ -21,36 +20,25 @@ const STATUS_LABELS: Record<FieldStatus, string> = {
   conflicting: '待确认',
 }
 
-const STATUS_DOT: Record<FieldStatus, string> = {
-  confirmed: 'bg-green-500',
-  inferred: 'bg-blue-400',
-  missing: 'bg-gray-300 dark:bg-gray-600',
-  conflicting: 'bg-red-500',
-}
-
-function FieldRow({
+function CoreCard({
   label,
   value,
   status,
-  highlight,
 }: {
   label: string
   value: string
   status: FieldStatus
-  highlight?: boolean
 }) {
   const isMissing = status === 'missing' || !value
 
   return (
-    <div className={`space-y-1 rounded-md px-2 py-1.5 -mx-2 transition-colors ${highlight ? 'bg-orange-50 dark:bg-orange-950/30' : ''}`}>
-      <div className="flex items-center gap-2">
+    <div className="bg-white rounded-lg p-4 border border-[#e5e5e5] border-l-[3px] border-l-[#bae6fd] shadow-sm hover:border-l-[#0ea5e9] hover:shadow transition-all">
+      <div className="flex items-center gap-1.5 mb-2">
         <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[status]}`} />
-        <span className="text-xs font-medium text-muted-foreground flex-1">{label}</span>
-        <span className={`text-xs px-1.5 py-0.5 rounded-full ${STATUS_STYLES[status]}`}>
-          {STATUS_LABELS[status]}
-        </span>
+        <span className="text-xs font-semibold text-[#737373]">{label}</span>
+        <span className="text-[0.625rem] text-[#a3a3a3] ml-auto">{STATUS_LABELS[status]}</span>
       </div>
-      <p className={`text-sm pl-3.5 leading-relaxed ${isMissing ? 'text-muted-foreground/50 italic' : 'text-foreground'}`}>
+      <p className={`text-sm leading-relaxed ${isMissing ? 'text-[#a3a3a3] italic' : 'text-[#171717]'}`}>
         {isMissing ? '待补充' : value}
       </p>
     </div>
@@ -59,7 +47,8 @@ function FieldRow({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-1">
+    <div className="flex items-center gap-2.5 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#737373]">
+      <span className="w-5 h-[3px] rounded-sm bg-[#0ea5e9]" />
       {children}
     </div>
   )
@@ -68,117 +57,98 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export function DraftPanel({ draft }: DraftPanelProps) {
   const score = draft.assistant_judgement.clarity_score
   const scoreColor =
-    score >= 7 ? 'text-green-600' : score >= 4 ? 'text-yellow-600' : 'text-muted-foreground'
+    score >= 7 ? 'text-[#15803d]' : score >= 4 ? 'text-yellow-600' : 'text-[#737373]'
 
   const hasSummary = draft.idea_summary.value && draft.idea_summary.status !== 'missing'
 
   return (
-    <div className="h-full overflow-y-auto px-4 py-4 space-y-4">
-      {/* Header row */}
+    <div className="h-full overflow-y-auto px-4 py-5 space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-semibold">实时需求草案</span>
+        <span className="text-sm font-semibold text-[#0a0a0a]">实时需求草案</span>
         {score > 0 ? (
           <span className={`text-sm font-bold tabular-nums ${scoreColor}`}>
             清晰度 {score}/10
           </span>
         ) : (
-          <span className="text-xs text-muted-foreground/50">等待分析...</span>
+          <span className="text-xs text-[#a3a3a3]">等待分析...</span>
         )}
       </div>
 
-      {/* 当前摘要 — always shown, prominent when filled */}
+      {/* 当前理解 — Cal.ai realtime card style */}
       {hasSummary ? (
-        <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5">
-          <div className="text-xs font-medium text-primary mb-1">当前理解</div>
-          <p className="text-sm leading-relaxed text-foreground">{draft.idea_summary.value}</p>
+        <div className="bg-[#e0f2fe] border border-[rgba(14,165,233,0.25)] rounded-xl px-5 py-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-1 h-3.5 rounded-sm bg-[#0ea5e9]" />
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#0284c7]">当前理解</span>
+          </div>
+          <p className="text-sm leading-relaxed text-[#262626] font-mono">{draft.idea_summary.value}</p>
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-muted px-3 py-2.5">
-          <div className="text-xs font-medium text-muted-foreground mb-1">当前理解</div>
-          <p className="text-sm text-muted-foreground/50 italic">分析中，稍候片刻...</p>
+        <div className="border border-dashed border-[#e5e5e5] rounded-xl px-5 py-4">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-1 h-3.5 rounded-sm bg-[#d4d4d4]" />
+            <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#737373]">当前理解</span>
+          </div>
+          <p className="text-sm text-[#a3a3a3] italic">分析中，稍候片刻...</p>
         </div>
       )}
 
-      <Separator />
-
-      {/* Core fields — ALL always visible */}
+      {/* Core fields — grid layout */}
       <SectionLabel>核心要素</SectionLabel>
-      <div className="space-y-3">
-        <FieldRow
-          label="目标用户"
-          value={draft.target_user.primary.value}
-          status={draft.target_user.primary.status}
-        />
-        <FieldRow
-          label="使用场景"
-          value={draft.scenario.value}
-          status={draft.scenario.status}
-        />
-        <FieldRow
-          label="核心问题"
-          value={draft.core_problem.value}
-          status={draft.core_problem.status}
-        />
-        <FieldRow
-          label="目标结果"
-          value={draft.desired_outcome.value}
-          status={draft.desired_outcome.status}
-        />
-        <FieldRow
-          label="当前替代方案"
-          value={draft.current_solution.value}
-          status={draft.current_solution.status}
-        />
+      <div className="grid grid-cols-1 gap-3">
+        <CoreCard label="目标用户" value={draft.target_user.primary.value} status={draft.target_user.primary.status} />
+        <CoreCard label="使用场景" value={draft.scenario.value} status={draft.scenario.status} />
+        <CoreCard label="核心问题" value={draft.core_problem.value} status={draft.core_problem.status} />
+        <CoreCard label="目标结果" value={draft.desired_outcome.value} status={draft.desired_outcome.status} />
+        <CoreCard label="当前替代方案" value={draft.current_solution.value} status={draft.current_solution.status} />
       </div>
-
-      <Separator />
 
       {/* MVP scope */}
       <SectionLabel>MVP 范围</SectionLabel>
-      <div className="space-y-2">
-        <div className="text-xs text-muted-foreground">必须做</div>
-        {draft.mvp_scope.must_have.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {draft.mvp_scope.must_have.map((item, i) => (
-              <span
-                key={i}
-                className="text-xs bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 px-2 py-0.5 rounded-full"
-              >
-                ✓ {item}
-              </span>
-            ))}
+      <div className="bg-white rounded-xl border border-[#e5e5e5] px-5 py-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {draft.mvp_scope.must_have.length > 0 ? (
+            <>
+              {draft.mvp_scope.must_have.map((item, i) => (
+                <span
+                  key={i}
+                  className="px-3.5 py-1.5 bg-[#dcfce7] text-[#15803d] border border-[rgba(21,128,61,0.25)] rounded-lg text-[0.8125rem] font-medium"
+                >
+                  {item}
+                </span>
+              ))}
+            </>
+          ) : (
+            <span className="text-sm text-[#a3a3a3]">待补充</span>
+          )}
+        </div>
+        {draft.mvp_scope.out_of_scope.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-[#f4f4f4]">
+            <span className="text-xs text-[#737373] font-medium mb-2 block">当前不做</span>
+            <div className="flex flex-wrap gap-2">
+              {draft.mvp_scope.out_of_scope.map((item, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1 bg-[#f4f4f4] text-[#737373] rounded-lg text-[0.8125rem] line-through"
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
-        ) : (
-          <p className="text-sm text-muted-foreground/50 italic pl-0.5">待补充</p>
         )}
       </div>
 
-      {draft.mvp_scope.out_of_scope.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs text-muted-foreground">当前不做</div>
-          <div className="flex flex-wrap gap-1.5">
-            {draft.mvp_scope.out_of_scope.map((item, i) => (
-              <span
-                key={i}
-                className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full line-through"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Constraints */}
-      {(draft.constraints && draft.constraints.length > 0) && (
+      {draft.constraints && draft.constraints.length > 0 && (
         <>
-          <Separator />
           <SectionLabel>约束条件</SectionLabel>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-2">
             {draft.constraints.map((c, i) => (
               <span
                 key={i}
-                className="text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300 px-2 py-0.5 rounded-full"
+                className="px-3 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-lg text-[0.8125rem]"
               >
                 {c}
               </span>
@@ -190,12 +160,11 @@ export function DraftPanel({ draft }: DraftPanelProps) {
       {/* Open questions */}
       {draft.open_questions.length > 0 && (
         <>
-          <Separator />
           <SectionLabel>待确认项</SectionLabel>
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {draft.open_questions.map((q, i) => (
-              <li key={i} className="text-sm text-yellow-700 dark:text-yellow-400 flex items-start gap-1.5">
-                <span className="mt-0.5 shrink-0">?</span>
+              <li key={i} className="text-sm text-yellow-700 flex items-start gap-2">
+                <span className="mt-0.5 shrink-0 text-yellow-400">?</span>
                 <span>{q}</span>
               </li>
             ))}
@@ -203,13 +172,12 @@ export function DraftPanel({ draft }: DraftPanelProps) {
         </>
       )}
 
-      {/* Main gap — highlighted */}
+      {/* Main gap */}
       {draft.assistant_judgement.main_gap && (
         <>
-          <Separator />
-          <div className="space-y-1 rounded-md bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/50 px-3 py-2.5">
-            <span className="text-xs font-semibold text-orange-700 dark:text-orange-400">当前最大缺口</span>
-            <p className="text-sm text-orange-700 dark:text-orange-400 leading-relaxed">
+          <SectionLabel>当前最大缺口</SectionLabel>
+          <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4">
+            <p className="text-sm text-orange-700 leading-relaxed">
               {draft.assistant_judgement.main_gap}
             </p>
           </div>

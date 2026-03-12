@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin as supabase } from '@/lib/supabase/client'
 import { RequirementDraft } from '@/types/draft'
+import { getUserFromRequest } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
+    const user = getUserFromRequest(req)
+    if (!user) {
+      return NextResponse.json({ error: '未登录' }, { status: 401 })
+    }
+
     const body: { draft: RequirementDraft; markdown: string } = await req.json()
     const { draft, markdown } = body
 
     const { data, error } = await supabase
       .from('requirements')
       .insert({
+        user_id: user.userId,
         idea_summary: draft.idea_summary.value,
         target_user: draft.target_user.primary.value,
         scenario: draft.scenario.value,
