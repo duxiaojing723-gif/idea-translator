@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     response.cookies.set(getAuthCookieName(), cookieValue, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.COOKIE_SECURE === 'true',
       sameSite: 'lax',
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
